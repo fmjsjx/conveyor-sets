@@ -77,11 +77,6 @@
         <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>com.douzi.commons</groupId>
-        <artifactId>banner</artifactId>
-        <version>${banner.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.lmax</groupId>
         <artifactId>disruptor</artifactId>
         <version>${disruptor.version}</version>
