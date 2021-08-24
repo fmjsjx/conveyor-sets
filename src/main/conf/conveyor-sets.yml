@@ -1,0 +1,5 @@
+## TODO other configurations ...
+
+# include conveyor-sets configuration paths
+includes:
+- ../conf.d/*.yml

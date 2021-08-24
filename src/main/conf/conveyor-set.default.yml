@@ -1,0 +1,208 @@
+# 配置命名
+name: demo
+
+# 产品ID列表
+products:
+- 9999
+
+# 日志传输模板配置
+conveyors:
+# 设备激活日志
+- name: device
+  # REDIS 输入
+  input.redis:
+    # URI
+    uri: redis://:111111@10.7.125.116:6380/0
+    # key pattern
+    key: product:${product}:device:activations
+    # batch size
+    batch: 200
+    # type: list|stream
+    type: list
+    # optional options for type `stream`
+    #stream:
+      # group name
+      #group: g0
+      # consumer name
+      #consumer: c0
+    #
+  # MySQL 输出
+  output.mysql:
+    # JDBC URL
+    jdbc-url: jdbc:mysql://10.7.125.172:3306/cowboy_log_db
+    # username
+    username: root
+    # pasword
+    password: MyNewPass#123
+    # table name
+    table: tb_device_activation_log
+    # insert mode: ignore|replace
+    # the default value is ignore
+    mode: ignore
+    # 表字段映射
+    fields:
+    - name: productId
+      column: product_id
+      type: int
+    - name: channel
+      column: channel
+      type: string
+    - name: channelId
+      column: channel_id
+      type: int
+    - name: address
+      column: ip
+      type: string
+    - name: version
+      column: client_version
+      type: string
+    - name: deviceId
+      column: device_id
+      type: string
+    - name: slot
+      column: slot
+      type: int
+    - name: deviceInfo
+      column: device_info
+      type: string
+    - name: osInfo
+      column: os_info
+      type: string
+    - name: time
+      column: create_time
+      type: unix_time
+# 事件日志
+- name: event
+  # REDIS 输入
+  input.redis:
+    # URI
+    uri: redis://:111111@10.7.125.116:6380/0
+    # key pattern
+    key: biz:${product}:event
+    # batch size
+    batch: 200
+    # type: list|stream
+    type: list
+  # MySQL 输出
+  output.mysql:
+    # JDBC URL
+    jdbc-url: jdbc:mysql://10.7.125.172:3306/cowboy_log_db
+    # username
+    username: root
+    # pasword
+    password: 'MyNewPass#123'
+    # table name
+    table: tb_event_log
+    # insert mode: ignore|replace
+    # the default value is ignore
+    mode: ignore
+    # 开启派生表传输功能
+    derivation-enabled: true
+    # 派生表映射字段
+    derived-field: _e
+    # 派生表映射
+    derived-tables:
+      auth.account: tb_auth_account_log
+      auth.login: tb_auth_login_log
+      cattle_roping.begin: tb_cattle_roping_begin_log
+      cattle_roping.end: tb_cattle_roping_end_log
+      cattle_roping.bonus: tb_cattle_roping_bonus_log
+      cash.out: tb_cash_out_log
+    # 表字段映射
+    fields:
+    - name: u
+      column: uid
+      type: int
+    - name: pi
+      column: product_id
+      type: int
+    - name: c
+      column: channel
+      type: string
+    - name: ci
+      column: channel_id
+      type: int
+    - name: v
+      column: client_version
+      type: string
+    - name: d
+      column: device_id
+      type: string
+    - name: s
+      column: slot
+      type: int
+    - name: _e
+      column: event
+      type: string
+    - name: _d
+      column: data
+      type: string
+    - name: _t
+      column: create_time
+      type: unix_time
+# 道具变化日志
+- name: item
+  # REDIS 输入
+  input.redis:
+    # URI
+    uri: redis://:111111@10.7.125.116:6380/0
+    # key pattern
+    key: biz:${product}:item
+    # batch size
+    batch: 200
+    # type: list|stream
+    type: list
+  # MySQL 输出
+  output.mysql:
+    # JDBC URL
+    jdbc-url: jdbc:mysql://10.7.125.172:3306/cowboy_log_db
+    # username
+    username: root
+    # pasword
+    password: 'MyNewPass#123'
+    # table name
+    table: tb_item_log
+    # insert mode: ignore|replace
+    # the default value is ignore
+    mode: ignore
+    # 表字段映射
+    fields:
+    - name: u
+      column: uid
+      type: int
+    - name: pi
+      column: product_id
+      type: int
+    - name: c
+      column: channel
+      type: string
+    - name: ci
+      column: channel_id
+      type: int
+    - name: v
+      column: client_version
+      type: string
+    - name: d
+      column: device_id
+      type: string
+    - name: s
+      column: slot
+      type: int
+    - name: ii
+      column: item_id
+      type: int
+    - name: o
+      column: original
+      type: long
+    - name: n
+      column: number
+      type: long
+    - name: si
+      column: source_id
+      type: int
+    - name: r
+      column: remark
+      type: string
+    - name: _t
+      column: create_time
+      type: unix_time

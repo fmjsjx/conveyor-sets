@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+  <Properties>
+    <Property name="PID">????</Property>
+    <Property name="LOG_EXCEPTION_CONVERSION_WORD">%xwEx</Property>
+    <Property name="LOG_LEVEL_PATTERN">%5p</Property>
+    <Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd HH:mm:ss.SSS</Property>
+    <Property name="CONSOLE_LOG_PATTERN">%clr{%d{${LOG_DATEFORMAT_PATTERN}}}{faint} %clr{${LOG_LEVEL_PATTERN}} %clr{${sys:PID}}{magenta} %clr{---}{faint} %clr{[%15.15t]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
+    <Property name="FILE_LOG_PATTERN">%d{${LOG_DATEFORMAT_PATTERN}} ${LOG_LEVEL_PATTERN} ${sys:PID} --- [%t] %-40.40c{1.} : %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
+    
+    <Property name="FILE_LOG_DIR">logs</Property>
+    
+    <Property name="ROLLING_LOG_FILE_NAME">${FILE_LOG_DIR}/conveyor-sets.log</Property>
+    <Property name="ROLLING_LOG_FILE_PATTERN">${FILE_LOG_DIR}/history/conveyor-sets-%d{yyyy-MM-dd}.log.gz</Property>
+    <Property name="ROLLING_LOG_PATTERN">${FILE_LOG_PATTERN}</Property>
+    
+    <Property name="FAILURE_LOGS_FILE_NAME">${FILE_LOG_DIR}/biz/failure.log</Property>
+    <Property name="FAILURE_LOGS_FILE_PATTERN">${FILE_LOG_DIR}/biz/history/failure-%d{yyyy-MM-dd}.log.gz</Property>
+    <Property name="FAILURE_LOGS_PATTERN">%m%n</Property>
+    
+    <Property name="ERROR_LOG_FILE_NAME">${FILE_LOG_DIR}/error.log</Property>
+    <Property name="ERROR_LOG_FILE_PATTERN">${FILE_LOG_DIR}/history/error-%d{yyyy-MM-dd}.log.gz</Property>
+    <Property name="ERROR_LOG_PATTERN">${FILE_LOG_PATTERN}</Property>
+
+  </Properties>
+
+  <Appenders>
+
+    <Console name="Console" target="SYSTEM_OUT" follow="true">
+      <PatternLayout pattern="${sys:CONSOLE_LOG_PATTERN}" />
+    </Console>
+
+    <RollingRandomAccessFile name="RollingLogRollingFile" fileName="${ROLLING_LOG_FILE_NAME}"
+      filePattern="${ROLLING_LOG_FILE_PATTERN}" immediateFlush="false">
+      <PatternLayout pattern="${ROLLING_LOG_PATTERN}" />
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+      </Policies>
+      <DefaultRolloverStrategy>
+        <Delete basePath="${FILE_LOG_DIR}" maxDepth="2">
+          <IfFileName glob="history/conveyor-sets-*.log.gz" />
+          <IfLastModified age="30d" />
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingRandomAccessFile>
+
+    <RollingRandomAccessFile name="ErrorLogRollingFile" fileName="${ERROR_LOG_FILE_NAME}"
+      filePattern="${ERROR_LOG_FILE_PATTERN}" immediateFlush="false">
+      <PatternLayout pattern="${ERROR_LOG_PATTERN}" />
+      <ThresholdFilter level="ERROR" />
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+      </Policies>
+    </RollingRandomAccessFile>
+
+    <RollingRandomAccessFile name="FailureLogsRollingFile" fileName="${FAILURE_LOGS_FILE_NAME}"
+      filePattern="${FAILURE_LOGS_FILE_PATTERN}" immediateFlush="false">
+      <PatternLayout pattern="${FAILURE_LOGS_PATTERN}" />
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+      </Policies>
+    </RollingRandomAccessFile>
+
+  </Appenders>
+  
+  <Loggers>
+    <AsyncLogger name="org.springframework.boot" level="info" includeLocation="false" />
+    <AsyncLogger name="com.github.fmjsjx" level="info" includeLocation="false" />
+    <AsyncLogger name="com.github.fmjsjx.conveyor" level="info" includeLocation="false" />
+    <AsyncLogger name="com.github.fmjsjx.conveyor.core" level="info" includeLocation="false" />
+    <AsyncLogger name="com.github.fmjsjx.conveyor.core.input" level="info" includeLocation="false" />
+    <AsyncLogger name="com.github.fmjsjx.conveyor.core.output" level="info" includeLocation="false" />
+    
+    <AsyncLogger name="failureLogger" level="info" includeLocation="false" additivity="false">
+      <AppenderRef ref="FailureLogsRollingFile" />
+    </AsyncLogger>
+
+    <AsyncRoot level="warn">
+      <AppenderRef ref="Console" />
+      <AppenderRef ref="RollingLogRollingFile" />
+      <AppenderRef ref="ErrorLogRollingFile" />
+    </AsyncRoot>
+  </Loggers>
+
+</Configuration>

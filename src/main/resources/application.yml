@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: conveyor-sets
+  profiles:
+    active:
+    - dev
+
+app:
+  name: '@project.name@'
+  version: 'v@project.version@'

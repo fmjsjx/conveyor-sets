@@ -1,0 +1,7 @@
+logging:
+  level:
+    '[com.github.fmjsjx.conveyor]': info
+    '[com.github.fmjsjx.conveyor.core]': info
+    '[com.github.fmjsjx.conveyor.core.input]': info
+    '[com.github.fmjsjx.conveyor.core.output]': info
+    '[com.github.fmjsjx]': info
