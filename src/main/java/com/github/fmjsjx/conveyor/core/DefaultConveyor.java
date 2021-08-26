@@ -18,14 +18,16 @@ import lombok.extern.slf4j.Slf4j;
 public class DefaultConveyor implements Conveyor {
 
     private static final int NOT_STARTED = 0;
-    private static final int RUNNING = 1;
-    private static final int SHUTING_DOWN = 2;
-    private static final int TERMINATED = 3;
+    private static final int STARTED = 1;
+    private static final int RUNNING = 2;
+    private static final int SHUTING_DOWN = 3;
+    private static final int TERMINATED = 4;
 
     private final String name;
     private final Input input;
     private final Output output;
     private final AtomicInteger stateCtl = new AtomicInteger(NOT_STARTED);
+    private final Promise<Conveyor> runningFuture = new DefaultPromise<>(GlobalEventExecutor.INSTANCE);
 
     private volatile Promise<Void> terminatedFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE)
             .setSuccess(null);
@@ -48,7 +50,7 @@ public class DefaultConveyor implements Conveyor {
 
     @Override
     public boolean isStarted() {
-        return stateCtl.get() >= RUNNING;
+        return stateCtl.get() >= STARTED;
     }
 
     @Override
@@ -59,8 +61,14 @@ public class DefaultConveyor implements Conveyor {
     @Override
     public synchronized Future<Void> shutdown() {
         if (!stateCtl.compareAndSet(RUNNING, SHUTING_DOWN)) {
-            // if not started, just set to terminated
-            stateCtl.compareAndSet(NOT_STARTED, TERMINATED);
+            // if just started then set to terminated
+            if (!stateCtl.compareAndSet(STARTED, SHUTING_DOWN)) {
+                // double check for running state
+                if (!stateCtl.compareAndSet(RUNNING, SHUTING_DOWN)) {
+                    // if not started, just set to terminated
+                    stateCtl.compareAndSet(NOT_STARTED, TERMINATED);
+                }
+            }
         }
         return terminatedFuture;
     }
@@ -81,15 +89,18 @@ public class DefaultConveyor implements Conveyor {
     }
 
     @Override
-    public synchronized void startup(Executor executor) {
-        if (stateCtl.compareAndSet(NOT_STARTED, RUNNING)) {
+    public synchronized Future<Conveyor> startup(Executor executor) {
+        if (stateCtl.compareAndSet(NOT_STARTED, STARTED)) {
             terminatedFuture = new DefaultPromise<>(GlobalEventExecutor.INSTANCE);
-            log.info("[conveyor:startup] Start up {}", this);
             executor.execute(this::start);
         }
+        return runningFuture;
     }
 
     private void start() {
+        stateCtl.set(RUNNING);
+        log.info("[conveyor:startup] Start up {}", this);
+        runningFuture.setSuccess(this);
         for (; isRunning();) {
             safeTransfer();
         }
@@ -114,9 +125,7 @@ public class DefaultConveyor implements Conveyor {
             terminatedFuture.setSuccess(null);
         } else {
             stateCtl.set(TERMINATED);
-            if (!terminatedFuture.isDone()) {
-                terminatedFuture.setSuccess(null);
-            }
+            terminatedFuture.trySuccess(null);
             log.info("[conveyor:shutdown] {} terminated", this);
         }
     }

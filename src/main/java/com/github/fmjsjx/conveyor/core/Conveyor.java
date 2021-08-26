@@ -18,6 +18,6 @@ public interface Conveyor {
 
     boolean isTerminated();
 
-    void startup(Executor executor);
+    Future<Conveyor> startup(Executor executor);
 
 }

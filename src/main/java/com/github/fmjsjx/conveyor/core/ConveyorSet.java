@@ -19,7 +19,7 @@ public interface ConveyorSet {
 
     int conveyorSize();
 
-    void startup(Executor executor);
+    Future<ConveyorSet> startup(Executor executor);
 
     Future<Void> shutdown();
 
