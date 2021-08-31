@@ -15,6 +15,7 @@ public class CollectionUtil {
                     return false;
                 }
             }
+            return true;
         }
         return false;
     }
