@@ -1,9 +1,12 @@
 package com.github.fmjsjx.conveyor.core;
 
+import java.lang.Thread.State;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.github.fmjsjx.conveyor.core.input.Input;
 import com.github.fmjsjx.conveyor.core.output.Output;
@@ -31,6 +34,8 @@ public class DefaultConveyor implements Conveyor {
 
     private volatile Promise<Void> terminatedFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE)
             .setSuccess(null);
+
+    private final AtomicReference<ThreadInfo> threadInfoRef = new AtomicReference<>();
 
     public DefaultConveyor(String name, Input input, Output output, Executor executor) {
         this(name, input, output);
@@ -89,6 +94,30 @@ public class DefaultConveyor implements Conveyor {
     }
 
     @Override
+    public String status() {
+        var state = stateCtl.get();
+        switch (state) {
+        case NOT_STARTED:
+            return "NOT_STARTED";
+        case STARTED:
+            return "STARTED";
+        case RUNNING:
+            return "RUNNING";
+        case SHUTING_DOWN:
+            return "SHUTING_DOWN";
+        case TERMINATED:
+            return "TERMINATED";
+        default:
+            return "UNKNOWN(" + state + ")";
+        }
+    }
+
+    @Override
+    public Optional<ThreadInfo> threadInfo() {
+        return Optional.ofNullable(threadInfoRef.get());
+    }
+
+    @Override
     public synchronized Future<Conveyor> startup(Executor executor) {
         if (stateCtl.compareAndSet(NOT_STARTED, STARTED)) {
             terminatedFuture = new DefaultPromise<>(GlobalEventExecutor.INSTANCE);
@@ -98,6 +127,7 @@ public class DefaultConveyor implements Conveyor {
     }
 
     private void start() {
+        threadInfoRef.set(new ThreadInfoImpl());
         stateCtl.set(RUNNING);
         log.info("[conveyor:startup] Start up {}", this);
         runningFuture.setSuccess(this);
@@ -186,6 +216,50 @@ public class DefaultConveyor implements Conveyor {
         }
         // push failed but never running
         output.failed(batch);
+    }
+
+    private static final class ThreadInfoImpl implements ThreadInfo {
+
+        private final Thread thread;
+
+        private ThreadInfoImpl(Thread thread) {
+            this.thread = thread;
+        }
+
+        private ThreadInfoImpl() {
+            this(Thread.currentThread());
+        }
+
+        @Override
+        public long id() {
+            return thread.getId();
+        }
+
+        @Override
+        public String name() {
+            return thread.getName();
+        }
+
+        @Override
+        public String groupName() {
+            return thread.getThreadGroup().getName();
+        }
+
+        @Override
+        public boolean daemon() {
+            return thread.isDaemon();
+        }
+
+        @Override
+        public State state() {
+            return thread.getState();
+        }
+
+        @Override
+        public String toString() {
+            return "ThreadInfoImpl(thread=" + thread + ")";
+        }
+
     }
 
 }

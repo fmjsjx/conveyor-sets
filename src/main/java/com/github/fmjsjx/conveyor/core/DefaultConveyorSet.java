@@ -1,8 +1,14 @@
 package com.github.fmjsjx.conveyor.core;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import com.github.fmjsjx.conveyor.config.ConveyorSetConfig;
 
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
@@ -19,28 +25,38 @@ public class DefaultConveyorSet implements ConveyorSet {
     private static final int SHUTING_DOWN = 3;
     private static final int TERMINATED = 4;
 
-    private final String name;
+    private final ConveyorSetConfig config;
     private final List<Conveyor> conveyors;
     private final AtomicInteger stateCtl = new AtomicInteger(NOT_STARTED);
+    private final AtomicReference<LocalDateTime> startTimeRef = new AtomicReference<>();
 
     private final Promise<ConveyorSet> runningFuture = new DefaultPromise<>(GlobalEventExecutor.INSTANCE);
 
     private volatile Promise<Void> terminatedFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE)
             .setSuccess(null);
 
-    public DefaultConveyorSet(String name, List<Conveyor> conveyors, Executor executor) {
-        this(name, conveyors);
+    public DefaultConveyorSet(ConveyorSetConfig config, List<Conveyor> conveyors, Executor executor) {
+        this(config, conveyors);
         startup(executor);
     }
 
-    public DefaultConveyorSet(String name, List<Conveyor> conveyors) {
-        this.name = name;
+    public DefaultConveyorSet(ConveyorSetConfig config, List<Conveyor> conveyors) {
+        this.config = config;
         this.conveyors = List.copyOf(conveyors);
     }
 
     @Override
-    public String name() {
-        return name;
+    public ConveyorSetConfig config() {
+        return config;
+    }
+
+    @Override
+    public Optional<Duration> upTime() {
+        var startTime = startTimeRef.get();
+        if (startTime == null) {
+            return Optional.empty();
+        }
+        return Optional.of(Duration.between(startTime, LocalDateTime.now()));
     }
 
     @Override
@@ -69,13 +85,38 @@ public class DefaultConveyorSet implements ConveyorSet {
     }
 
     @Override
+    public List<Conveyor> conveyors() {
+        return conveyors;
+    }
+    
+    @Override
     public String toString() {
-        return "DefaultConveyorSet(" + name + ")";
+        return "DefaultConveyorSet(" + name() + ")";
+    }
+
+    @Override
+    public String status() {
+        var state = stateCtl.get();
+        switch (state) {
+        case NOT_STARTED:
+            return "NOT_STARTED";
+        case STARTED:
+            return "STARTED";
+        case RUNNING:
+            return "RUNNING";
+        case SHUTING_DOWN:
+            return "SHUTING_DOWN";
+        case TERMINATED:
+            return "TERMINATED";
+        default:
+            return "UNKNOWN(" + state + ")";
+        }
     }
 
     @Override
     public synchronized Future<ConveyorSet> startup(Executor executor) {
         if (stateCtl.compareAndSet(NOT_STARTED, STARTED)) {
+            startTimeRef.set(LocalDateTime.now());
             terminatedFuture = new DefaultPromise<>(GlobalEventExecutor.INSTANCE);
             log.info("[conveyor-set:startup] Start up {}", this);
             for (Conveyor conveyor : conveyors) {
