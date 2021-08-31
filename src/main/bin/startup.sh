@@ -74,10 +74,9 @@ fi
 SPRING_PROFILES="dev"
 
 SPRING_ARGS="--spring.profiles.active=${SPRING_PROFILES}"
-#SPRING_ARGS="${SPRING_ARGS} --logging.level.com.douzi=info"
 
 # Project Version
-PRG_VERSION="1.0.0"
+PRG_VERSION="1.1.0"
 
 # start program
 for arg in $*; do
