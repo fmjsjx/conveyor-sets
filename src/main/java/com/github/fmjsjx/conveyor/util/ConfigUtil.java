@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class ConfigUtil {
 
     private static final class ConfDirHolder {
@@ -59,11 +56,8 @@ public class ConfigUtil {
 
     public static final <R> R loadConfiguration(File file, Function<InputStream, R> loader)
             throws FileNotFoundException, IOException {
-        log.info("[app:init] Loading configuration {}", file);
         try (var in = new BufferedInputStream(new FileInputStream(file))) {
-            var cfg = loader.apply(in);
-            log.debug("[app:init] Loaded configuration <== {}", cfg);
-            return cfg;
+            return loader.apply(in);
         }
     }
 
@@ -89,9 +83,6 @@ public class ConfigUtil {
             stream.forEach(list::add);
             return list;
         }
-    }
-
-    private ConfigUtil() {
     }
 
 }
