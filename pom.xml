@@ -10,7 +10,7 @@
   </parent>
   <groupId>com.github.fmjsjx</groupId>
   <artifactId>conveyor-sets</artifactId>
-  <version>1.1.0</version>
+  <version>1.0.0</version>
 
   <name>Conveyor Sets</name>
   <description>A tool set for transferring business logs.</description>
