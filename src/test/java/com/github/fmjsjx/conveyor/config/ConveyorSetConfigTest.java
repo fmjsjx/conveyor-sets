@@ -8,12 +8,12 @@ public class ConveyorSetConfigTest {
 
     @Test
     public void test() {
-        try (var in = getClass().getResourceAsStream("/conf.d/cowboy-1038.yml")) {
+        try (var in = getClass().getResourceAsStream("/conf.d/demo-0000.yml")) {
             var config = ConveyorSetConfig.loadFromYaml(in);
             assertNotNull(config);
-            assertEquals("cowboy-1038", config.name);
+            assertEquals("demo", config.name);
             assertEquals(1, config.products.size());
-            assertEquals(1038, config.products.get(0));
+            assertEquals("0000", config.products.get(0));
             assertEquals(3, config.conveyors.size());
             assertEquals("device", config.conveyors.get(0).name);
             assertEquals("event", config.conveyors.get(1).name);

@@ -35,7 +35,7 @@ public class ConveyorSetConfig {
             throw new IllegalArgumentException("there must not be any space in `name`");
         }
         this.autoStart = autoStart == null ? true : autoStart.booleanValue();
-        this.products = products.stream().peek(Objects::requireNonNull).sorted()
+        this.products = products.stream().peek(Objects::requireNonNull).map(String::strip).sorted()
                 .collect(Collectors.toUnmodifiableList());
         this.conveyors = conveyors.stream().peek(Objects::requireNonNull).sorted()
                 .collect(Collectors.toUnmodifiableList());
