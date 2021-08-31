@@ -42,11 +42,11 @@ public class ConfigUtil {
         return value;
     }
 
-    public static final Map<String, String> params(int productId) {
-        return Map.of("${product}", Integer.toString(productId));
+    public static final Map<String, String> params(String productId) {
+        return Map.of("${product}", productId);
     }
 
-    public static final String fixValue(String pattern, int productId) {
+    public static final String fixValue(String pattern, String productId) {
         return fixValue(pattern, params(productId));
     }
 

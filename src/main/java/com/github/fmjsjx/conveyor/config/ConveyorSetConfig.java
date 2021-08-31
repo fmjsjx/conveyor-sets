@@ -21,13 +21,13 @@ public class ConveyorSetConfig {
 
     final String name;
     final boolean autoStart;
-    final List<Integer> products;
+    final List<String> products;
     final List<ConveyorConfig> conveyors;
 
     @JsonCreator
     public ConveyorSetConfig(@JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "auto-start", required = false) Boolean autoStart,
-            @JsonProperty(value = "products", required = true) List<Integer> products,
+            @JsonProperty(value = "products", required = true) List<String> products,
             @JsonProperty(value = "conveyors", required = true) List<ConveyorConfig> conveyors) {
         this.name = name;
         var nsp = name.split("\\s+");
@@ -49,7 +49,7 @@ public class ConveyorSetConfig {
         return autoStart;
     }
 
-    public List<Integer> products() {
+    public List<String> products() {
         return products;
     }
 

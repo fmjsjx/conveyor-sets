@@ -48,7 +48,7 @@ public class RedisListInput extends AbstractRedisInput {
 
     private boolean blocking;
 
-    public RedisListInput(String name, RedisClient client, int productId, InputRedisConfig config) {
+    public RedisListInput(String name, RedisClient client, String productId, InputRedisConfig config) {
         super(name, client, productId, config);
         this.batch = config.batch();
         this.keys = new String[] { key };

@@ -32,12 +32,12 @@ public class DerivedMysqlOutput extends AbstractMysqlOutput {
         var columns = toSqlColumns(config.fields());
         var placeholders = toSqlPlaceholders(config.fields());
         var mode = config.mode();
-        batchSqlFactory = toBatchSqlFactory(mode, config.table(), columns, placeholders);
+        batchSqlFactory = toBatchSqlFactory(mode, config.fixedTable(), columns, placeholders);
         valueSetters = config.fields().stream().map(FieldConfig::valueSetter).collect(Collectors.toUnmodifiableList());
         derivedField = config.derivedField();
         derivedTables = config.derivedTables();
-        config.derivedTables()
-                .forEach((k, v) -> derivedBatchSqlFactories.put(k, toBatchSqlFactory(mode, v, columns, placeholders)));
+        config.derivedTables().forEach((k, v) -> derivedBatchSqlFactories.put(k,
+                toBatchSqlFactory(mode, config.fixedTable(v), columns, placeholders)));
     }
 
     @Override

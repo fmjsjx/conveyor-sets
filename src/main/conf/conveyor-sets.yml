@@ -1,3 +1,25 @@
+# configurations for admin servers
+
+# unix domain socket server
+unix-server:
+  # the path to the socket file
+  file: /var/run/conveyor-sets/conveyor-sets.sock
+  # default is no username
+  #username: user
+  # default is no password
+  #password: 123
+
+# socket server in RESP3
+resp3-server:
+  # the address, default is any address
+  address: 127.0.0.1
+  # the port
+  port: 9826
+  # default is no username
+  #username: user
+  # default is no password
+  #password: 123
+
 ## TODO other configurations ...
 
 # include conveyor-sets configuration paths

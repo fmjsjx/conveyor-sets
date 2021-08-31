@@ -1,9 +1,13 @@
 # 配置命名
 name: demo
 
+# 是否自动启动
+# the default is true
+#auto-start: true
+
 # 产品ID列表
 products:
-- 9999
+- 0000
 
 # 日志传输模板配置
 conveyors:
@@ -12,7 +16,7 @@ conveyors:
   # REDIS 输入
   input.redis:
     # URI
-    uri: redis://:111111@10.7.125.116:6380/0
+    uri: redis://default:123456@127.0.0.1:6379/0
     # key pattern
     key: product:${product}:device:activations
     # batch size
@@ -29,13 +33,21 @@ conveyors:
   # MySQL 输出
   output.mysql:
     # JDBC URL
-    jdbc-url: jdbc:mysql://10.7.125.172:3306/cowboy_log_db
+    jdbc-url: jdbc:mysql://127.0.0.1:3306/log_db
     # username
     username: root
     # pasword
-    password: MyNewPass#123
+    password: 123456
+    # server timezone
+    # the default value is Asia/Shanghai
+    #server-timezone: Asia/Shanghai
+    # use SSL
+    # the default value is false
+    #use-ssl: false
+    # (Optional) schema
+    #schema: log_db
     # table name
-    table: tb_device_activation_log
+    table: tb_device_log
     # insert mode: ignore|replace
     # the default value is ignore
     mode: ignore
@@ -76,7 +88,7 @@ conveyors:
   # REDIS 输入
   input.redis:
     # URI
-    uri: redis://:111111@10.7.125.116:6380/0
+    uri: redis://default:123456@127.0.0.1:6379/0
     # key pattern
     key: biz:${product}:event
     # batch size
@@ -86,11 +98,19 @@ conveyors:
   # MySQL 输出
   output.mysql:
     # JDBC URL
-    jdbc-url: jdbc:mysql://10.7.125.172:3306/cowboy_log_db
+    jdbc-url: jdbc:mysql://127.0.0.1:3306/log_db
     # username
     username: root
     # pasword
-    password: 'MyNewPass#123'
+    password: 123456
+    # server timezone
+    # the default value is Asia/Shanghai
+    #server-timezone: Asia/Shanghai
+    # use SSL
+    # the default value is false
+    #use-ssl: false
+    # (Optional) schema
+    #schema: log_db
     # table name
     table: tb_event_log
     # insert mode: ignore|replace
@@ -104,10 +124,6 @@ conveyors:
     derived-tables:
       auth.account: tb_auth_account_log
       auth.login: tb_auth_login_log
-      cattle_roping.begin: tb_cattle_roping_begin_log
-      cattle_roping.end: tb_cattle_roping_end_log
-      cattle_roping.bonus: tb_cattle_roping_bonus_log
-      cash.out: tb_cash_out_log
     # 表字段映射
     fields:
     - name: u
@@ -145,7 +161,7 @@ conveyors:
   # REDIS 输入
   input.redis:
     # URI
-    uri: redis://:111111@10.7.125.116:6380/0
+    uri: redis://default:123456@127.0.0.1:6379/0
     # key pattern
     key: biz:${product}:item
     # batch size
@@ -155,11 +171,19 @@ conveyors:
   # MySQL 输出
   output.mysql:
     # JDBC URL
-    jdbc-url: jdbc:mysql://10.7.125.172:3306/cowboy_log_db
+    jdbc-url: jdbc:mysql://127.0.0.1:3306/log_db
     # username
     username: root
     # pasword
-    password: 'MyNewPass#123'
+    password: 123456
+    # server timezone
+    # the default value is Asia/Shanghai
+    #server-timezone: Asia/Shanghai
+    # use SSL
+    # the default value is false
+    #use-ssl: false
+    # (Optional) schema
+    #schema: log_db
     # table name
     table: tb_item_log
     # insert mode: ignore|replace

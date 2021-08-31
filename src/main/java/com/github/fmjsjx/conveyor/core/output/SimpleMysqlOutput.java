@@ -23,7 +23,7 @@ public class SimpleMysqlOutput extends AbstractMysqlOutput {
         super(name, dataSource);
         var columns = toSqlColumns(config.fields());
         var placeholders = toSqlPlaceholders(config.fields());
-        batchSqlFactory = toBatchSqlFactory(config.mode(), config.table(), columns, placeholders);
+        batchSqlFactory = toBatchSqlFactory(config.mode(), config.fixedTable(), columns, placeholders);
         valueSetters = config.fields().stream().map(FieldConfig::valueSetter).collect(Collectors.toUnmodifiableList());
     }
 

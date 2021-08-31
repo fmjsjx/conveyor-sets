@@ -219,7 +219,7 @@ public class ConveyorSetManager implements InitializingBean, DisposableBean {
         }
     }
 
-    private Input initRedisInput(Integer productId, String conveyorName, InputRedisConfig config) {
+    private Input initRedisInput(String productId, String conveyorName, InputRedisConfig config) {
         var inputName = conveyorName + ".input.redis";
         return switch (config.type()) {
         case LIST -> new RedisListInput(inputName, redisClientManager.globalRedisClient(), productId, config);

@@ -30,7 +30,7 @@ public abstract class AbstractRedisInput implements Input {
         this.key = key;
     }
 
-    protected AbstractRedisInput(String name, RedisClient client, int productId, InputRedisConfig config) {
+    protected AbstractRedisInput(String name, RedisClient client, String productId, InputRedisConfig config) {
         this(name, toConnectionFactory(client, config.uri()), ConfigUtil.fixValue(config.key(), productId));
     }
 

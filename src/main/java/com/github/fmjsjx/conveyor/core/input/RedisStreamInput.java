@@ -57,7 +57,7 @@ public class RedisStreamInput extends AbstractRedisInput {
     private boolean blocking;
 
     @SuppressWarnings("unchecked")
-    public RedisStreamInput(String name, RedisClient client, int productId, InputRedisConfig config) {
+    public RedisStreamInput(String name, RedisClient client, String productId, InputRedisConfig config) {
         super(name, client, productId, config);
         batch = config.batch();
         consumer = Consumer.from(config.stream().group(), config.stream().consumer());

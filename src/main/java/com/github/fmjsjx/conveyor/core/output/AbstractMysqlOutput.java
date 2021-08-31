@@ -19,7 +19,7 @@ import io.netty.util.collection.IntObjectHashMap;
 public abstract class AbstractMysqlOutput implements Output {
 
     protected static final String toSqlColumns(List<FieldConfig> fields) {
-        return fields.stream().map(field -> "`" + field.column() + "`").collect(Collectors.joining(","));
+        return fields.stream().map(FieldConfig::fixedColumn).collect(Collectors.joining(","));
     }
 
     protected static final String toSqlPlaceholders(List<FieldConfig> fields) {

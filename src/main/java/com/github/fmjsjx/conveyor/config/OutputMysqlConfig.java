@@ -218,6 +218,11 @@ public class OutputMysqlConfig implements DataSourceConfig {
         };
     }
 
+    private static final String toPoolName(String jdbcUrl, String username, String password, String serverTimezone,
+            boolean useSSL) {
+        return username + ":" + password + "@" + jdbcUrl + "?" + serverTimezone + (useSSL ? "&useSSL" : "");
+    }
+
     public enum InsertMode {
         IGNORE(t -> "INSERT IGNORE INTO " + t), REPLACE(t -> "REPLACE INFO " + t);
 
@@ -281,6 +286,10 @@ public class OutputMysqlConfig implements DataSourceConfig {
             return column;
         }
 
+        public String fixedColumn() {
+            return "`" + column + "`";
+        }
+
         public FieldType type() {
             return type;
         }
@@ -314,11 +323,13 @@ public class OutputMysqlConfig implements DataSourceConfig {
 
     }
 
+    final String poolName;
     final String jdbcUrl;
     final String username;
     final String password;
     final String serverTimezone;
     final boolean useSSL;
+    final Optional<String> schema;
     final String table;
     final InsertMode mode;
     final boolean derivationEnabled;
@@ -332,6 +343,7 @@ public class OutputMysqlConfig implements DataSourceConfig {
             @JsonProperty(value = "password", required = true) String password,
             @JsonProperty(value = "server-timezone", required = false) String serverTimezone,
             @JsonProperty(value = "use-ssl", required = false) boolean useSSL,
+            @JsonProperty(value = "schema", required = false) String schema,
             @JsonProperty(value = "table", required = true) String table,
             @JsonProperty(value = "mode", required = false) String mode,
             @JsonProperty(value = "derivation-enabled", required = false) boolean derivationEnabled,
@@ -343,6 +355,8 @@ public class OutputMysqlConfig implements DataSourceConfig {
         this.password = password;
         this.serverTimezone = Optional.ofNullable(serverTimezone).orElse("Asia/Shanghai");
         this.useSSL = useSSL;
+        this.poolName = toPoolName(jdbcUrl, username, password, serverTimezone, useSSL);
+        this.schema = Optional.ofNullable(schema);
         this.table = table;
         this.mode = InsertMode.valueOf(Optional.ofNullable(mode).orElse("ignore").toUpperCase());
         this.derivationEnabled = derivationEnabled;
@@ -357,6 +371,11 @@ public class OutputMysqlConfig implements DataSourceConfig {
             throw new IllegalArgumentException("empty fields");
         }
         this.fields = List.copyOf(fields);
+    }
+
+    @Override
+    public String poolName() {
+        return poolName;
     }
 
     @Override
@@ -384,8 +403,23 @@ public class OutputMysqlConfig implements DataSourceConfig {
         return useSSL;
     }
 
+    public Optional<String> schema() {
+        return schema;
+    }
+
     public String table() {
         return table;
+    }
+
+    public String fixedTable(String table) {
+        if (schema.isPresent()) {
+            return "`" + schema.get() + "`.`" + table + "`";
+        }
+        return "`" + table + "`";
+    }
+
+    public String fixedTable() {
+        return fixedTable(table);
     }
 
     public InsertMode mode() {
@@ -415,15 +449,13 @@ public class OutputMysqlConfig implements DataSourceConfig {
         }
         if (obj instanceof OutputMysqlConfig) {
             var o = (OutputMysqlConfig) obj;
-            if (jdbcUrl.equals(o.jdbcUrl) && username.equals(o.username) && password.equals(o.password)) {
-                if (serverTimezone.equals(o.serverTimezone) && useSSL == o.useSSL && table.equals(o.table)
-                        && mode == o.mode && derivationEnabled == o.derivationEnabled) {
-                    if (CollectionUtil.isEqual(fields, o.fields)) {
-                        if (derivationEnabled) {
-                            return derivedField.equals(o.derivedField) && derivedTables.equals(o.derivedTables);
-                        }
-                        return true;
+            if (poolName.equals(o.poolName) && schema.equals(o.schema) && table.equals(o.table) && mode == o.mode
+                    && derivationEnabled == o.derivationEnabled) {
+                if (CollectionUtil.isEqual(fields, o.fields)) {
+                    if (derivationEnabled) {
+                        return derivedField.equals(o.derivedField) && derivedTables.equals(o.derivedTables);
                     }
+                    return true;
                 }
             }
         }
