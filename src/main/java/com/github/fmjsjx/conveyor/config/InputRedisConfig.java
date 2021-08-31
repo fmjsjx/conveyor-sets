@@ -98,6 +98,7 @@ public class InputRedisConfig {
                 if (type == Type.STREAM) {
                     return stream.equals(o.stream);
                 }
+                return true;
             }
         }
         return false;

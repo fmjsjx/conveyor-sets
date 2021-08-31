@@ -20,14 +20,21 @@ public class ConveyorSetConfig {
     }
 
     final String name;
+    final boolean autoStart;
     final List<Integer> products;
     final List<ConveyorConfig> conveyors;
 
     @JsonCreator
     public ConveyorSetConfig(@JsonProperty(value = "name", required = true) String name,
+            @JsonProperty(value = "auto-start", required = false) Boolean autoStart,
             @JsonProperty(value = "products", required = true) List<Integer> products,
             @JsonProperty(value = "conveyors", required = true) List<ConveyorConfig> conveyors) {
         this.name = name;
+        var nsp = name.split("\\s+");
+        if (nsp.length > 1) {
+            throw new IllegalArgumentException("there must not be any space in `name`");
+        }
+        this.autoStart = autoStart == null ? true : autoStart.booleanValue();
         this.products = products.stream().peek(Objects::requireNonNull).sorted()
                 .collect(Collectors.toUnmodifiableList());
         this.conveyors = conveyors.stream().peek(Objects::requireNonNull).sorted()
@@ -36,6 +43,10 @@ public class ConveyorSetConfig {
 
     public String name() {
         return name;
+    }
+
+    public boolean autoStart() {
+        return autoStart;
     }
 
     public List<Integer> products() {
@@ -50,8 +61,11 @@ public class ConveyorSetConfig {
     public boolean equals(Object obj) {
         if (obj instanceof ConveyorSetConfig) {
             var o = (ConveyorSetConfig) obj;
-            return name.equals(o.name) && CollectionUtil.isEqual(products, o.products)
-                    && CollectionUtil.isEqual(conveyors, o.conveyors);
+            if (name.equals(o.name) && autoStart == o.autoStart) {
+                if (CollectionUtil.isEqual(products, o.products)) {
+                    return CollectionUtil.isEqual(conveyors, o.conveyors);
+                }
+            }
         }
         return false;
     }

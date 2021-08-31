@@ -2,6 +2,7 @@ package com.github.fmjsjx.conveyor.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.fmjsjx.libcommon.util.StringUtil;
 
 import lombok.ToString;
 
@@ -42,7 +43,11 @@ public class ConveyorConfig implements Comparable<ConveyorConfig> {
     public boolean equals(Object obj) {
         if (obj instanceof ConveyorConfig) {
             var o = (ConveyorConfig) obj;
-            return name.equals(o.name) && inputRedis.equals(o.inputRedis) && outputMysql.equals(o.outputMysql);
+            if (StringUtil.isEquals(name, o.name)) {
+                if (inputRedis.equals(o.inputRedis)) {
+                    return outputMysql.equals(o.outputMysql);
+                }
+            }
         }
         return false;
     }

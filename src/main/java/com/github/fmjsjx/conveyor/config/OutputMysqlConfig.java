@@ -415,14 +415,16 @@ public class OutputMysqlConfig implements DataSourceConfig {
         }
         if (obj instanceof OutputMysqlConfig) {
             var o = (OutputMysqlConfig) obj;
-            if (jdbcUrl.equals(o.jdbcUrl) && username.equals(o.username) && password.equals(o.password)
-                    && serverTimezone.equals(o.serverTimezone) && useSSL == o.useSSL && table.equals(o.table)
-                    && mode == o.mode && derivationEnabled == o.derivationEnabled
-                    && CollectionUtil.isEqual(fields, o.fields)) {
-                if (derivationEnabled) {
-                    return derivedField.equals(o.derivedField) && derivedTables.equals(o.derivedTables);
+            if (jdbcUrl.equals(o.jdbcUrl) && username.equals(o.username) && password.equals(o.password)) {
+                if (serverTimezone.equals(o.serverTimezone) && useSSL == o.useSSL && table.equals(o.table)
+                        && mode == o.mode && derivationEnabled == o.derivationEnabled) {
+                    if (CollectionUtil.isEqual(fields, o.fields)) {
+                        if (derivationEnabled) {
+                            return derivedField.equals(o.derivedField) && derivedTables.equals(o.derivedTables);
+                        }
+                        return true;
+                    }
                 }
-                return true;
             }
         }
         return false;
