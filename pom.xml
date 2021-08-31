@@ -10,7 +10,7 @@
   </parent>
   <groupId>com.github.fmjsjx</groupId>
   <artifactId>conveyor-sets</artifactId>
-  <version>1.0.1</version>
+  <version>1.1.0</version>
 
   <name>Conveyor Sets</name>
   <description>A tool set for transferring business logs.</description>
@@ -19,7 +19,7 @@
     <java.version>16</java.version>
     <netty.version>4.1.67.Final</netty.version>
     <netty-tcnative.version>2.0.41.Final</netty-tcnative.version>
-    <libnetty.version>2.2.1</libnetty.version>
+    <libnetty.version>2.2.2</libnetty.version>
     <libcommon.version>2.4.3</libcommon.version>
     <myboot.version>1.1.1</myboot.version>
     <javassist.version>3.28.0-GA</javassist.version>
@@ -144,6 +144,14 @@
     <dependency>
       <groupId>com.github.fmjsjx</groupId>
       <artifactId>libcommon-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fmjsjx</groupId>
+      <artifactId>libnetty-transport</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fmjsjx</groupId>
+      <artifactId>libnetty-resp3</artifactId>
     </dependency>
     <dependency>
       <groupId>io.lettuce</groupId>
