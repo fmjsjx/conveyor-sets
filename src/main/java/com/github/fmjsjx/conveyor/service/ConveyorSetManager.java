@@ -49,6 +49,7 @@ import com.github.fmjsjx.libcommon.collection.CollectorUtil;
 
 import io.netty.channel.epoll.Epoll;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -244,6 +245,26 @@ public class ConveyorSetManager implements InitializingBean, DisposableBean {
             return showStatus(args);
         case "reread":
             return reread();
+        case "start":
+            if (args.length == 1) {
+                return startAll();
+            }
+            return start(args[0]);
+        case "stop":
+            if (args.length == 1) {
+                return stopAll();
+            }
+            return stop(args[0]);
+        case "restart":
+            if (args.length == 1) {
+                return restartAll();
+            }
+            return restart(args[0]);
+        case "update":
+            if (args.length == 1) {
+                return updateAll();
+            }
+            return update(args[0]);
         default:
             return "unknown command `" + cmd + "`";
         }
@@ -254,7 +275,7 @@ public class ConveyorSetManager implements InitializingBean, DisposableBean {
             var name = args[1];
             var conveyorSet = conveyorSetMap.get(name);
             if (conveyorSet == null) {
-                return "ERROR no such conveyor-set `" + name + "`";
+                return name + ": ERROR (no such conveyor-set)";
             }
             return StatusUtil.showStatus(conveyorSet);
         }
@@ -263,22 +284,30 @@ public class ConveyorSetManager implements InitializingBean, DisposableBean {
         return conveyorSets.stream().map(cs -> StatusUtil.format(nameWidth, cs)).collect(Collectors.joining("\r\n"));
     }
 
-    private String reread() {
+    private List<ConveyorSetConfig> loadIncludes() throws Exception {
         ConveyorSetsConfig mainCfg;
         try {
             mainCfg = loadMainCfg();
         } catch (Exception e) {
             var out = new StringWriter();
             e.printStackTrace(new PrintWriter(out));
-            return "ERROR load `conveyor-sets.yml` failed - " + out.toString();
+            throw new Exception("ERROR load `conveyor-sets.yml` failed - " + out.toString());
         }
-        List<ConveyorSetConfig> configs;
         try {
-            configs = loadIncludes(mainCfg);
+            return loadIncludes(mainCfg);
         } catch (Exception e) {
             var out = new StringWriter();
             e.printStackTrace(new PrintWriter(out));
-            return "ERROR load includes failed - " + out.toString();
+            throw new Exception("ERROR load includes failed - " + out.toString());
+        }
+    }
+
+    private String reread() {
+        List<ConveyorSetConfig> configs;
+        try {
+            configs = loadIncludes();
+        } catch (Exception e) {
+            return e.getMessage();
         }
         var lines = new ArrayList<String>();
         var names = new LinkedHashSet<>(conveyorSetMap.keySet());
@@ -299,6 +328,211 @@ public class ConveyorSetManager implements InitializingBean, DisposableBean {
             lines.add("No config updates to processes");
         }
         return String.join("\r\n", lines);
+    }
+
+    private String startAll() {
+        List<ConveyorSetConfig> configs;
+        try {
+            configs = loadIncludes();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+        var lines = new ArrayList<String>();
+        for (var config : configs) {
+            if (!conveyorSetMap.containsKey(config.name())) {
+                var conveyorSet = initConveyorSet(config);
+                conveyorSet.startup(executor);
+                conveyorSetMap.put(conveyorSet.name(), conveyorSet);
+                lines.add(config.name() + ": started");
+            }
+        }
+        if (lines.isEmpty()) {
+            lines.add("No config updates to processes");
+        }
+        return String.join("\r\n", lines);
+    }
+
+    private String start(String name) {
+        var conveyorSet = conveyorSetMap.get(name);
+        if (conveyorSet != null) {
+            return name + ": ERROR (already started)";
+        }
+        List<ConveyorSetConfig> configs;
+        try {
+            configs = loadIncludes();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+        var config = configs.stream().filter(cfg -> name.equals(cfg.name())).findFirst();
+        if (config.isEmpty()) {
+            return name + ": ERROR (no such conveyor-set)";
+        }
+        conveyorSet = initConveyorSet(config.get());
+        conveyorSetMap.put(conveyorSet.name(), conveyorSet);
+        conveyorSet.startup(executor).awaitUninterruptibly(60, TimeUnit.SECONDS);
+        return name + ": started";
+    }
+
+    private String stopAll() {
+        var lines = new ArrayList<String>();
+        var names = new ArrayList<>(conveyorSetMap.keySet());
+        var futures = new ArrayList<Future<Void>>(names.size());
+        for (var name : names) {
+            var conveyorSet = conveyorSetMap.remove(name);
+            futures.add(conveyorSet.shutdown());
+            lines.add(name + ": stopped");
+        }
+        if (lines.isEmpty()) {
+            lines.add("No config updates to processes");
+        } else {
+            for (var future : futures) {
+                future.awaitUninterruptibly(60, TimeUnit.SECONDS);
+            }
+        }
+        return String.join("\r\n", lines);
+    }
+
+    private String stop(String name) {
+        var conveyorSet = conveyorSetMap.remove(name);
+        if (conveyorSet == null) {
+            return name + ": ERROR (no such conveyor-set)";
+        }
+        conveyorSet.shutdown().awaitUninterruptibly(60, TimeUnit.SECONDS);
+        return name + ": stopped";
+    }
+
+    private String restartAll() {
+        List<ConveyorSetConfig> configs;
+        try {
+            configs = loadIncludes();
+        } catch (Exception e) {
+            configs = List.of();
+        }
+        var lines = new ArrayList<String>();
+        var names = new ArrayList<>(conveyorSetMap.keySet());
+        for (var name : names) {
+            var conveyorSet = conveyorSetMap.remove(name);
+            conveyorSet.shutdown().awaitUninterruptibly(60, TimeUnit.SECONDS);
+            lines.add(name + ": stopped");
+            var newCfg = configs.stream().filter(cfg -> name.equals(cfg.name())).findFirst();
+            if (newCfg.isPresent()) {
+                conveyorSet = initConveyorSet(newCfg.get());
+            } else {
+                conveyorSet = initConveyorSet(conveyorSet.config());
+            }
+            conveyorSetMap.put(name, conveyorSet);
+            conveyorSet.startup(executor).awaitUninterruptibly(60, TimeUnit.SECONDS);
+            lines.add(name + ": started");
+        }
+        if (lines.isEmpty()) {
+            lines.add("No config updates to processes");
+        }
+        return String.join("\r\n", lines);
+    }
+
+    private String restart(String name) {
+        var conveyorSet = conveyorSetMap.remove(name);
+        if (conveyorSet == null) {
+            return name + ": ERROR (no such conveyor-set)";
+        }
+        var lines = new ArrayList<String>();
+        var future = conveyorSet.shutdown();
+        List<ConveyorSetConfig> configs;
+        try {
+            configs = loadIncludes();
+        } catch (Exception e) {
+            configs = List.of();
+        }
+        future.awaitUninterruptibly(60, TimeUnit.SECONDS);
+        lines.add(name + ": stopped");
+        var newCfg = configs.stream().filter(cfg -> name.equals(cfg.name())).findFirst();
+        if (newCfg.isPresent()) {
+            conveyorSet = initConveyorSet(newCfg.get());
+        } else {
+            conveyorSet = initConveyorSet(conveyorSet.config());
+        }
+        conveyorSetMap.put(name, conveyorSet);
+        conveyorSet.startup(executor).awaitUninterruptibly(60, TimeUnit.SECONDS);
+        lines.add(name + ": started");
+        return String.join("\r\n", lines);
+    }
+
+    private String updateAll() {
+        List<ConveyorSetConfig> configs;
+        try {
+            configs = loadIncludes();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+        var lines = new ArrayList<String>();
+        var names = new LinkedHashSet<>(conveyorSetMap.keySet());
+        for (var config : configs) {
+            if (names.remove(config.name())) {
+                var conveyorSet = conveyorSetMap.get(config.name());
+                if (!conveyorSet.config().equals(config)) {
+                    conveyorSetMap.remove(config.name());
+                    conveyorSet.shutdown().awaitUninterruptibly(60, TimeUnit.SECONDS);
+                    lines.add(config.name() + ": stopped");
+                    conveyorSet = initConveyorSet(config);
+                    conveyorSetMap.put(conveyorSet.name(), conveyorSet);
+                    conveyorSet.startup(executor).awaitUninterruptibly(60, TimeUnit.SECONDS);
+                    lines.add(config.name() + ": started");
+                }
+            } else {
+                var conveyorSet = initConveyorSet(config);
+                conveyorSetMap.put(conveyorSet.name(), conveyorSet);
+                conveyorSet.startup(executor).awaitUninterruptibly(60, TimeUnit.SECONDS);
+                lines.add(config.name() + ": started");
+            }
+        }
+        for (var name : names) {
+            var conveyorSet = conveyorSetMap.remove(name);
+            conveyorSet.shutdown().awaitUninterruptibly(60, TimeUnit.SECONDS);
+            lines.add(name + ": stopped");
+        }
+        if (lines.isEmpty()) {
+            lines.add("No config updates to processes");
+        }
+        return String.join("\r\n", lines);
+    }
+
+    private String update(String name) {
+        List<ConveyorSetConfig> configs;
+        try {
+            configs = loadIncludes();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+        if (conveyorSetMap.containsKey(name)) {
+            var config = configs.stream().filter(cfg -> name.equals(cfg.name())).findFirst();
+            if (config.isPresent()) {
+                var newCfg = config.get();
+                var conveyorSet = conveyorSetMap.get(name);
+                if (newCfg.equals(conveyorSet.config())) {
+                    return name + ": no changed";
+                }
+                conveyorSetMap.remove(name);
+                var lines = new ArrayList<String>(2);
+                conveyorSet.shutdown().awaitUninterruptibly(60, TimeUnit.SECONDS);
+                lines.add(name + ": stopped");
+                conveyorSet = initConveyorSet(config.get());
+                conveyorSetMap.put(conveyorSet.name(), conveyorSet);
+                conveyorSet.startup(executor).awaitUninterruptibly(60, TimeUnit.SECONDS);
+                lines.add(name + ": started");
+                return String.join("\r\n", lines);
+            }
+            var conveyorSet = conveyorSetMap.remove(name);
+            conveyorSet.shutdown().awaitUninterruptibly(60, TimeUnit.SECONDS);
+            return name + ": stopped";
+        }
+        var config = configs.stream().filter(cfg -> name.equals(cfg.name())).findFirst();
+        if (config.isPresent()) {
+            var conveyorSet = initConveyorSet(config.get());
+            conveyorSetMap.put(conveyorSet.name(), conveyorSet);
+            conveyorSet.startup(executor).awaitUninterruptibly(60, TimeUnit.SECONDS);
+            return name + ": started";
+        }
+        return name + ": ERROR (no such conveyor-set)";
     }
 
     private static final class StatusUtil {
@@ -362,5 +596,4 @@ public class ConveyorSetManager implements InitializingBean, DisposableBean {
         }
 
     }
-
 }
