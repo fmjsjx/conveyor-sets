@@ -11,7 +11,7 @@ echoHelp()
 }
 
 # java command
-cmd="/usr/lib/jvm/java-16/bin/java"
+cmd="/usr/lib/jvm/java-17/bin/java"
 
 if [ "x$cmd" = "x" ]; then
   cmd=`type -p java`
@@ -76,7 +76,7 @@ SPRING_PROFILES="dev"
 SPRING_ARGS="--spring.profiles.active=${SPRING_PROFILES}"
 
 # Project Version
-PRG_VERSION="1.1.0"
+PRG_VERSION="1.0.0"
 
 # start program
 for arg in $*; do
