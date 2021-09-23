@@ -200,6 +200,8 @@ public class ConveyorSetManager implements InitializingBean, DisposableBean {
                 var input = initRedisInput(productId, conveyorName, conveyorCfg.inputRedis());
                 var output = initMysqlOutput(conveyorName, conveyorCfg.outputMysql());
                 var conveyor = new DefaultConveyor(conveyorName, input, output);
+                config.maxRetryCount().ifPresent(conveyor::maxRetryCount);
+                conveyorCfg.maxRetryCount().ifPresent(conveyor::maxRetryCount);
                 log.debug("[app:init] {} initialized", conveyor);
                 conveyors.add(conveyor);
             }

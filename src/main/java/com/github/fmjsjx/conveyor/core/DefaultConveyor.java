@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DefaultConveyor implements Conveyor {
 
+    private static final int defaultMaxRetryCount = 3;
+
     private static final int NOT_STARTED = 0;
     private static final int STARTED = 1;
     private static final int RUNNING = 2;
@@ -31,6 +33,7 @@ public class DefaultConveyor implements Conveyor {
     private final Output output;
     private final AtomicInteger stateCtl = new AtomicInteger(NOT_STARTED);
     private final Promise<Conveyor> runningFuture = new DefaultPromise<>(GlobalEventExecutor.INSTANCE);
+    private int maxRetryCount = defaultMaxRetryCount;
 
     private volatile Promise<Void> terminatedFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE)
             .setSuccess(null);
@@ -126,6 +129,15 @@ public class DefaultConveyor implements Conveyor {
         return runningFuture;
     }
 
+    public int maxRetryCount() {
+        return maxRetryCount;
+    }
+
+    public DefaultConveyor maxRetryCount(int maxRetryCount) {
+        this.maxRetryCount = maxRetryCount;
+        return this;
+    }
+
     private void start() {
         threadInfoRef.set(new ThreadInfoImpl());
         stateCtl.set(RUNNING);
@@ -174,7 +186,7 @@ public class DefaultConveyor implements Conveyor {
 
     private List<Map<String, String>> safeInputFetch() {
         var input = this.input;
-        for (int retryCount = 0; retryCount < 3; retryCount++) {
+        for (int retryCount = 0; retryCount <= maxRetryCount; retryCount++) {
             try {
                 return input.fetch();
             } catch (Exception e) {
@@ -196,7 +208,7 @@ public class DefaultConveyor implements Conveyor {
 
     private void safeOutputPush(List<Map<String, String>> batch) {
         var output = this.output;
-        for (var retryCount = 0; isRunning(); retryCount++) {
+        for (var retryCount = 0; isRunning() || retryCount <= maxRetryCount; retryCount++) {
             // always retry when running
             try {
                 output.push(batch);
