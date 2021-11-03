@@ -61,8 +61,9 @@ cd ${PRGDIR}
 # Project Version
 PRG_VERSION="1.0.0"
 
-GC_OPTS="-XX:+UseEpsilonGC"
-JVM_OPTS="${GC_OPTS}"
+GC_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseEpsilonGC"
+MEM_OPTS="-Xms256M -Xmx256M -XX:+AlwaysPreTouch"
+JVM_OPTS="${GC_OPTS} ${MEM_OPTS}"
 
 # start program
 exec $cmd ${JVM_OPTS} -jar conveyor-sets-${PRG_VERSION}.jar admin $*
