@@ -26,8 +26,8 @@ if [ "x$cmd" = "x" ]; then
   fi
   # check java version
   jvm_version=$("$cmd" -version 2>&1 | awk -F '"' '/version/ {print $2}')
-  if [[ "$jvm_version" < "16" ]]; then
-    echo "Error: java16 is required."
+  if [[ "$jvm_version" < "17" ]]; then
+    echo "Error: java17 is required."
     exit 1
   fi
 fi
@@ -57,7 +57,9 @@ MEM_OPTS="-Xms256M -Xmx256M -XX:MaxDirectMemorySize=128M"
 # GC
 GC_LOG_DIR="logs"
 mkdir -p ${GC_LOG_DIR}
-GC_OPTS="-XX:+UseZGC -Xlog:gc:${GC_LOG_DIR}/gc.log"
+GC_OPTS="-XX:+UseZGC"
+#GC_OPTS="-XX:+UseShenandoahGC"
+GC_OPTS="${GC_OPTS} -Xlog:gc:${GC_LOG_DIR}/gc.log"
 
 # CUSTOM
 CUSTOM_OPTS=""
