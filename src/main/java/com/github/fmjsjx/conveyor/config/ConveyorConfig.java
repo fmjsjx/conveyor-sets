@@ -51,8 +51,7 @@ public class ConveyorConfig implements Comparable<ConveyorConfig> {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof ConveyorConfig) {
-            var o = (ConveyorConfig) obj;
+        if (obj instanceof ConveyorConfig o) {
             if (StringUtil.isEquals(name, o.name) && maxRetryCount.equals(o.maxRetryCount)) {
                 if (inputRedis.equals(o.inputRedis)) {
                     return outputMysql.equals(o.outputMysql);

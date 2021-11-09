@@ -25,8 +25,8 @@ public class DefaultValueConfig {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof DefaultValueConfig) {
-            return obj == this || StringUtil.isEquals(content, ((DefaultValueConfig) obj).content);
+        if (obj instanceof DefaultValueConfig o) {
+            return o == this || StringUtil.isEquals(content, o.content);
         }
         return false;
     }

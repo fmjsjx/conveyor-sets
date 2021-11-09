@@ -307,8 +307,7 @@ public class OutputMysqlConfig implements DataSourceConfig {
             if (obj == this) {
                 return true;
             }
-            if (obj instanceof FieldConfig) {
-                var o = (FieldConfig) obj;
+            if (obj instanceof FieldConfig o) {
                 return name.equals(o.name) && column.equals(o.column) && type == o.type
                         && defaultValue.equals(o.defaultValue);
             }
@@ -447,8 +446,7 @@ public class OutputMysqlConfig implements DataSourceConfig {
         if (obj == this) {
             return true;
         }
-        if (obj instanceof OutputMysqlConfig) {
-            var o = (OutputMysqlConfig) obj;
+        if (obj instanceof OutputMysqlConfig o) {
             if (poolName.equals(o.poolName) && schema.equals(o.schema) && table.equals(o.table) && mode == o.mode
                     && derivationEnabled == o.derivationEnabled) {
                 if (CollectionUtil.isEqual(fields, o.fields)) {

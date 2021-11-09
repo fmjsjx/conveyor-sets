@@ -38,8 +38,7 @@ public class InputRedisConfig {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof StreamConfig) {
-                var o = (StreamConfig) obj;
+            if (obj instanceof StreamConfig o) {
                 return group.equals(o.group) && consumer.equals(o.consumer);
             }
             return false;
@@ -92,8 +91,7 @@ public class InputRedisConfig {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof InputRedisConfig) {
-            var o = (InputRedisConfig) obj;
+        if (obj instanceof InputRedisConfig o) {
             if (uri.equals(o.uri) && key.equals(o.key) && batch == o.batch && type.equals(o.type)) {
                 if (type == Type.STREAM) {
                     return stream.equals(o.stream);

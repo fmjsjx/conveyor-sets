@@ -68,8 +68,7 @@ public class ConveyorSetConfig {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof ConveyorSetConfig) {
-            var o = (ConveyorSetConfig) obj;
+        if (obj instanceof ConveyorSetConfig o) {
             if (name.equals(o.name) && autoStart == o.autoStart && maxRetryCount.equals(o.maxRetryCount)) {
                 if (CollectionUtil.isEqual(products, o.products)) {
                     return CollectionUtil.isEqual(conveyors, o.conveyors);
