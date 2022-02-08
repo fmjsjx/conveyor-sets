@@ -1,0 +1,7 @@
+pluginManagement {
+    repositories {
+        maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
+    }
+}
+
+rootProject.name = "conveyor-sets"
